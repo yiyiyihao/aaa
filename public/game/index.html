@@ -1,0 +1,320 @@
+﻿<!DOCTYPE html>
+<html lang="zh-cmn-Hans" style="font-size: 16.15px;">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no" />
+<title>值得看&万佳安</title>
+<script src="js/jquery.js"></script>
+<script src="js/config.js"></script>
+<script src="js/do.js"></script>
+<script src="js/definition.js"></script>
+<script type="text/javascript" src="js/jquery.min.js"></script>
+<script src="js/preloadjs-NEXT.min.js"></script>
+<script>
+	(function (doc, win) {
+		var docEl = doc.documentElement,
+				resizeEvt = 'orientationchange' in window ? 'orientationchange' : 'resize',
+				recalc = function () {
+					var clientWidth = docEl.clientWidth;
+					if (!clientWidth) return;
+					docEl.style.fontSize = 5 * (clientWidth / 100) + 'px';
+				};
+
+		if (!doc.addEventListener) return;
+		win.addEventListener(resizeEvt, recalc, false);
+		doc.addEventListener('DOMContentLoaded', recalc, false);
+	})(document, window);
+</script>
+<style>
+.portrait body div.landscape{ display: none !important; }
+.landscape body div.landscape{ display: block !important; }
+.loading{position:fixed;z-index:999;top:0;left:0;display:table;width:100%;height:100%;background:#93167b;color:#cbe8b2;text-align:center}.loading .loader{display:table-cell;vertical-align:middle}.loading .loader span{position:relative;display:inline-block;margin-bottom:.5rem;border-top:.3rem solid hsla(0,0%,100%,.2);border-right:.3rem solid hsla(0,0%,100%,.2);border-bottom:.3rem solid hsla(0,0%,100%,.2);border-left:.3rem solid #fff;-webkit-animation:load 1s infinite linear;animation:load 1s infinite linear}.loading .loader span,.loading .loader span:after{width:2.8rem;height:2.8rem;border-radius:50%}@-webkit-keyframes load{0%{-webkit-transform:rotate(0);transform:rotate(0)}to{-webkit-transform:rotate(360deg);transform:rotate(360deg)}}@keyframes load{0%{-webkit-transform:rotate(0);transform:rotate(0)}to{-webkit-transform:rotate(360deg);transform:rotate(360deg)}}
+</style>
+<link rel="stylesheet" type="text/css" href="css/style2.css">
+</head>
+<body onload="init();">
+<!--loading-->
+<div id="loading" class="loading">
+    <div class="loader">
+        <span></span>
+        <p id="loadtext">Loading...</p>
+    </div>
+</div>
+<!--//loading-->
+<div class="gamebox">
+    <div class="stage">
+        <img src="images/stage.png" style="display: block;">
+        <div class="lanren">
+            <div class="agg"></div>
+            <div class="agg"></div>
+            <div class="agg"></div>
+        </div>
+        <!--中奖-->
+        <div class="winBox" style="display: none;">
+            <img src="">
+        </div>
+    </div>
+    <div class="footer">
+    	<p>活动仅展会现场抽奖有效</p>
+    </div>
+</div>
+<!--活动说明-->
+<div class="jn-box" style="display: none;">
+    <span class="btn-close">×</span>
+    <div id="tabs" class="tabs">
+        <strong class="current"><span>活动说明</span></strong>
+    </div>
+    <div id="tabs-body" class="tabsbox">
+        <div>
+            <h4>活动时间</h4>
+            <p>2018年12月6日-12月8日</p>
+            <h4>活动奖品</h4>
+            <p>特等奖：值得看智能摄像机一台</p>
+            <p>纪念奖：值得看定制手机环一份</p>
+        </div>
+    </div>
+</div>
+<!--没中-->
+<div id="sorryBox" class="sorryBox" style="display: none;">
+    <div>
+        <img src="images/sorry.png" style="margin-bottom: 10%;">
+        <button id="start-again" class="btn">再来一次</button>
+        <!-- <button class="btn btn-qrcode">关注我们</button> -->
+    </div>
+</div>
+<!--登记-->
+<div id="fromBox" class="fromBox" style="display: none;">
+    <div>
+        <img src="images/dj-header.png">
+        <div class="from">
+            <input type="tel" id="phone" value="" placeholder="输入手机号">
+            <div class="clearfix">
+                <input id="code" type="text" disabled="disabled" placeholder="填写验证码">
+                <button id="btn-getcode" class="btn">获取验证码</button>
+            </div>
+        </div>
+        <button id="btn-lq" class="btn">确认提交</button>
+    </div>
+</div>
+
+<!--关注我们二维码-->
+<div class="qrcodeBox" style="display: none;">
+    <div>
+        <img src="images/qrcode.png">
+        <span class="qr-close">×</span>
+    </div>
+</div>
+<img src="images/jingnan.png" class="acePack">
+
+<div class="landscape" style="display: none">
+    <div><img src="images/fpts.png"></div>
+</div>
+<script>
+const windowHeightSize = String(document.documentElement.clientHeight || document.body.clientHeight );
+if (!(localStorage.getItem('windowHeight'))) {
+  localStorage.setItem('windowHeight' , windowHeightSize);
+}
+const historyWindowHeight = Number(localStorage.getItem('windowHeight'));
+console.log('缓存 列表最小高度' + historyWindowHeight);
+$('body').css('min-height', historyWindowHeight);
+
+// 搜索框失去焦点
+$('.fromBox input').on('blur',this,function(ev) {
+	$(window).scrollTop(0);
+  setTimeout(function() {
+   $('body').css('min-height', historyWindowHeight);
+  }, 10);
+  //this.cleanInterval(); // 清除搜索提示
+});
+	var YesorNo = false;
+	//获取验证码
+	var waitCode = 120;
+	function time() {
+		var o = $('#btn-getcode');
+	    if (waitCode == 0) {
+	        o.removeAttr("disabled");
+	        o.text("获取验证码");
+	        waitCode = 2;
+	    } else {
+	        o.attr("disabled","");
+	        o.text("重新发送(" + waitCode + ")");
+	        waitCode--;
+	        setTimeout(function() {
+	            time()
+	        },1000);
+	    }
+	}
+	Do.ready("base", function () {
+        $(".acePack").on('click', function(){
+            $(".jn-box").show().find(".btn-close").on('click',function () {
+                $(".jn-box").hide();
+            });
+            $("#tabs-body").css({height:winH - $("#tabs").height()});
+        });
+		
+		var codeType = 'activity';
+		//点击结算按钮
+		$("body").on("click", "#btn-getcode", function(){
+			var phone = $('#phone').val().trim();
+			if(!phone){
+				layer.msg("请输入手机号码", {icon:2,time:1000});
+				return;
+			}
+			if(phone.length != 11){
+				layer.msg("手机号格式错误", {icon:2,time:1000});
+				return;
+			}
+			$("body").Method("sendSms", {phone: phone, type: codeType}, function(data){
+				var join = data.join;
+				if(join != undefined && join== 1){
+					layer.alert(data.msg, {}, function(){
+			    		window.location.reload();
+			    	});
+					return;
+				}else{
+					$('#code').removeAttr("disabled");
+					layer.msg(data.msg, {icon:1,time:1000});
+					time();
+				}
+				return;
+			});
+		});
+		//登记
+	    $("body").on('click', "#btn-lq", function(){
+	    	var phone = $('#phone').val().trim();
+	    	var code = $('#code').val().trim();
+			if(!phone){
+				layer.msg("请输入手机号码", {icon:2,time:1000});
+				return;
+			}
+			if(phone.length != 11){
+				layer.msg("手机号格式错误", {icon:2,time:1000});
+				return;
+			}
+			if(!code){
+				layer.msg("请输入验证码", {icon:2,time:1000});
+				return;
+			}
+			if(code.length != 6){
+				layer.msg("验证码格式错误", {icon:2,time:1000});
+				return;
+			}
+			$("body").Method("checkSmsCode", {phone: phone, code: code, type: codeType}, function(){
+				$("body").Method("joinActivity", {phone: phone}, function(data){
+					var result = data.prize;
+					if(result > 0){
+						$("#fromBox").hide();
+						layer.alert("恭喜您获得值得看智能摄像机一台，请凭手机号前往展会前台领取奖品", {}, function(){
+				    		window.location.reload();
+				    	});
+						return;
+					}else{
+						$("#fromBox").hide();
+				    	$("#sorryBox").show();
+			            YesorNo = false;
+					}
+				});
+			});
+	    });
+	});
+    var chance = 5;  //砸蛋次数
+    function init() {
+        var assetsPath = "images/";
+        manifest = [
+            {id: "img01", src: "agg.png"},
+            {id: "img02", src: "agg-puo.png"},
+            {id: "img03", src: "bg.jpg"},
+            {id: "img04", src: "hammer.png"},
+            {id: "img05", src: "jingnan.png"},
+            {id: "img07", src: "sorry.png"},
+            {id: "img08", src: "stage.png"},
+            {id: "img09", src: "qrcode.png"}
+        ];
+        preload = new createjs.LoadQueue(true, assetsPath);
+        preload.addEventListener("complete", doneLoading);
+        preload.addEventListener("progress", updateLoading);
+        preload.loadManifest(manifest);
+        function updateLoading() {
+            $("#loadtext").text("Loading " + (preload.progress * 100 | 0) + "%");
+        }
+        //loading完毕
+        function doneLoading(event) {
+            $("#loading").hide();
+        }
+        var winH = $(window).innerHeight();
+        var winW = $(window).innerWidth();
+        $("body,.gamebox,.jn-box").css({height:winH,width:winW});
+        
+        function aClick() {
+            $(".agg").off("click", aClick);
+            var _this = $(this);
+            _this.parents(".lanren").addClass("paused");
+            _this.html('<img src="images/hammer.png" class="hammer"><img src="images/agg-puo.png" class="agg-puo">');
+            setTimeout(function () {
+                _this.css({background:"none"}).find(".agg-puo").show();
+                setTimeout(function () {//是否中奖
+                    if (YesorNo == true){
+                        $("#sorryBox").show();
+                        YesorNo = false;
+                    }else{
+                        //$(".lanren").hide();
+                        //$(".winBox").show().find("img").attr("src","images/jiangpin.png");
+                        $(".footer").find("p").html("<button class='btn' style='margin: 1.5% 0;'>登记领奖</button>").on("click",function () {
+                            $("#fromBox").show();
+                        })
+                        YesorNo = true;
+                    }
+                },500);
+            },250);
+        }
+        $(".agg").on("click", aClick);
+        //重新开始
+        $("#start-again").on('click', function () {
+        	window.location.reload();
+        	return false;
+            $("#sorryBox").hide();
+            $(".footer").find("p").html("活动仅展会现场抽奖有效");
+            $(".lanren").show().removeClass("paused");
+            $(".agg").on("click", aClick).html("").attr("style","");
+        });
+        //打开锦囊
+        $(".acePack").on('click', function(){
+            $(".jn-box").show().find(".btn-close").on('click',function () {
+                $(".jn-box").hide();
+            });
+            $("#tabs-body").css({height:winH - $("#tabs").height()});
+        });
+
+        $("#tabs > strong").on('click', function(){
+            var index = $(this).index();
+            var divs = $("#tabs-body > div");
+            $(this).addClass("current").siblings().removeClass("current");
+            divs.hide();
+            divs.eq(index).show();
+        });
+
+    }
+    (function () {
+        var init = function () {
+            var updateOrientation = function () {
+                var orientation = window.orientation;
+                switch (orientation) {
+                    case 90:
+                    case -90:
+                        orientation = 'landscape'; //这里是横屏
+                        break;
+                    default:
+                        orientation = 'portrait'; //这里是竖屏
+                        break;
+                }
+                document.body.parentNode.setAttribute('class', orientation);
+            };
+            window.addEventListener('orientationchange', updateOrientation, false);
+            updateOrientation();
+        };
+        window.addEventListener('DOMContentLoaded', init, false);
+    })();
+
+</script>
+</body>
+</html>
